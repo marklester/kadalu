@@ -2,6 +2,7 @@
 'install' subcommand for kubectl-kadalu CLI tool
 """
 import sys
+import yaml
 
 from kubectl_kadalu import utils
 
@@ -26,6 +27,11 @@ def install_args(subparsers):
         help="local operator yaml file path"
     )
 
+    parser_install.add_argument(
+        "--kubelet-dir",
+        help="base path for kubelet",
+    )
+
 
 def subcmd_install(args):
     """ perform install subcommand """
@@ -44,7 +50,8 @@ def subcmd_install(args):
         operator_file = "%s/kadalu-operator%s%s.yaml" % (file_url, insttype, version)
 
     try:
-        cmd = [utils.KUBECTL_CMD, "apply", "-f", operator_file]
+        crds = prepare_yaml(args)
+        cmd = [utils.KUBECTL_CMD, "apply", "-f -", yaml.dump_all(crds)]
         print("Executing '%s'" % cmd)
         resp = utils.execute(cmd)
         print("Kadalu operator create request sent successfully")
@@ -56,3 +63,21 @@ def subcmd_install(args):
         print("", file=sys.stderr)
         print(err.stderr, file=sys.stderr)
         sys.exit(1)
+
+def replace_in_dictlist(key,key_value,dict_list,replacement):
+    for idx, item in enumerate(dict_list):
+        if item[key] == key_value:
+            dict_list[idx] = replacement
+
+def prepare_yaml(args):
+    stream = open("kadalu-operator.yaml")
+    crds = list(yaml.load_all(stream))
+    if args.kubelet_dir:
+        operator={}
+        for crd in crds:
+            if crd["metadata"]["name"] == "operator":
+                operator=crd
+        kubelet_entry = {"name":"KUBELET_DIR","value":args.kubelet_dir}
+        env = operator["spec"]["template"]["spec"]["containers"][0]["env"]
+        replace_in_dictlist("name","KUBELET_DIR",env, kubelet_entry)
+    return crds

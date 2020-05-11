@@ -2,7 +2,7 @@
 
 set -e -o pipefail
 
-DOCKER_USER="${DOCKER_USER:-starfusionmz}"
+DOCKER_USER="${DOCKER_USER:-kadalu}"
 KADALU_VERSION="${KADALU_VERSION:-latest}"
 
 RUNTIME_CMD=${RUNTIME_CMD:-docker}

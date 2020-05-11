@@ -206,4 +206,4 @@ spec:
             - name: KADALU_VERSION
               value: "0.6.0"
             - name: KUBELET_DIR
-              value: "/var/snap/microk8s/common/var/lib/kubelet"
+              value: "/var/lib/kubelet"
